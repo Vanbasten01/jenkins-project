@@ -8,12 +8,8 @@ pipeline {
     stages {
 
         stage('Set Up') {
-            steps {
-                
+            steps {                
                 sh '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
             }
@@ -21,7 +17,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh ". venv/bin/activate && pytest"
+                sh "pytest"
             }
         }
 
@@ -33,7 +29,7 @@ pipeline {
                     # Install zip if missing
                     command -v zip >/dev/null 2>&1 || apt install -y zip
                     # Package everything EXCEPT the Jenkins venv
-                    zip -r myapp.zip . -x '*.git*' -x 'venv/*'
+                    zip -r myapp.zip . -x '*.git*'
                     ls -lart
                 '''
             }
@@ -49,11 +45,11 @@ pipeline {
                     sh '''
                         #!/bin/bash
                         set -e
-                        scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ubuntu
+                        scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ec2-user
                         ssh -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no ${USERNAME}@${SERVER_IP} /bin/bash << 'EOF'
                             set -e
                             commd -v unzip >/dev/null 2>&1 || sudo apt install -y unzip
-                            unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app
+                            unzip -o /home/ec2-user/myapp.zip -d /home/ec2-user/app
                             # Ensure virtualenv exists
                             if [ ! -d "app/venv" ]; then
                                 python3 -m venv venv
