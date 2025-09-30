@@ -13,9 +13,8 @@ pipeline {
                     #!/bin/bash
                     set -e
                     python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    venv/bin/python -m pip install --upgrade pip
+                    venv/bin/python -m pip install -r requirements.txt
                 '''
             }
         }
@@ -25,8 +24,7 @@ pipeline {
                 sh '''
                     #!/bin/bash
                     set -e
-                    . venv/bin/activate
-                    pytest
+                    venv/bin/python -m pytest
                 '''
             }
         }
@@ -36,8 +34,8 @@ pipeline {
                 sh '''
                     #!/bin/bash
                     set -e
-                    apt-get update || true
-                    apt-get install -y zip || true
+                    # Install zip if missing
+                    command -v zip >/dev/null 2>&1 || sudo yum install -y zip
                     # Package everything EXCEPT the Jenkins venv
                     zip -r myapp.zip . -x '*.git*' -x 'venv/*'
                     ls -lart
@@ -60,13 +58,13 @@ pipeline {
                             set -e
                             cd /home/ec2-user
                             unzip -o myapp.zip -d app
-                            # Create and activate virtualenv on the EC2 server
+                            # Ensure virtualenv exists
                             if [ ! -d "app/venv" ]; then
                                 python3 -m venv app/venv
                             fi
-                            . app/venv/bin/activate
-                            pip install --upgrade pip
-                            pip install -r app/requirements.txt
+                            # Use venv Python and pip directly
+                            app/venv/bin/python -m pip install --upgrade pip
+                            app/venv/bin/python -m pip install -r app/requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
                     '''
