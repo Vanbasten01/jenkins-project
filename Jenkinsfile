@@ -10,7 +10,7 @@ pipeline {
         stage('Set Up') {
             steps {
                 sh '''
-                cd app
+                cd jenkins-project
                 pip install -r requirements.txt
                 '''
             }
