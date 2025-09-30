@@ -62,7 +62,7 @@ pipeline {
                             cd /home/ubuntu/app
                             # Install requirements using the venv pip
                             sudo apt install -y python3-pip
-                            pip install -r requirements.txt
+                            venv/bin/pip install -r requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
                     '''
