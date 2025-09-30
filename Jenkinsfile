@@ -9,7 +9,11 @@ pipeline {
 
         stage('Set Up') {
             steps {
-                sh "pip install -r requirements.txt"
+                
+                sh '''
+                pip -v > /dev/null 2>&1 || sudo apt install -y python3-pip
+                pip install -r requirements.txt
+                '''
             }
         }
 
