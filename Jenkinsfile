@@ -9,10 +9,7 @@ pipeline {
 
         stage('Set Up') {
             steps {
-                sh '''
-                cd jenkins-project
-                pip install -r requirements.txt
-                '''
+                sh "pip install -r requirements.txt"
             }
         }
 
