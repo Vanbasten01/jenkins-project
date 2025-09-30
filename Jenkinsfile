@@ -27,7 +27,7 @@ pipeline {
                     #!/bin/bash
                     set -e
                     # Install zip if missing
-                    command -v zip >/dev/null 2>&1 || apt install -y zip
+                    command -v zip >/dev/null 2>&1 || yum install -y zip
                     # Package everything EXCEPT the Jenkins venv
                     zip -r myapp.zip . -x '*.git*'
                     ls -lart
@@ -48,16 +48,16 @@ pipeline {
                         scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ec2-user
                         ssh -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no ${USERNAME}@${SERVER_IP} /bin/bash << 'EOF'
                             set -e
-                            commd -v unzip >/dev/null 2>&1 || sudo apt install -y unzip
+                            commd -v unzip >/dev/null 2>&1 || sudo yum install -y unzip
                             unzip -o /home/ec2-user/myapp.zip -d /home/ec2-user/app
                             # Ensure virtualenv exists
                             if [ ! -d "app/venv" ]; then
                                 python3 -m venv venv
                             fi
                             source app/venv/bin/activate
-                            cd /home/ubuntu/app
+                            cd /home/ec2-user/app
                             # Install requirements using the venv pip
-                            sudo apt install -y python3-pip
+                            sudo yum install -y python3-pip
                             python3 -m pip install -r requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
