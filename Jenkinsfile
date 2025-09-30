@@ -58,7 +58,7 @@ pipeline {
                             sudo yum install -y python3-pip
                             /home/ec2-user/app/venv/bin/python3 -m pip install --upgrade pip
                             python3 -m pip install -r requirements.txt
-                            sudo systemctl restart flaskapp.service || echo 'Failed to restart service'
+                            sudo /usr/bin/systemctl restart flaskapp.service || echo 'Failed to restart service'
                             sudo systemctl restart flaskapp.service
 
 REMOTE_EOF
