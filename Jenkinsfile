@@ -52,6 +52,7 @@ pipeline {
                         scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ubuntu
                         ssh -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no ${USERNAME}@${SERVER_IP} /bin/bash << 'EOF'
                             set -e
+                            commd -v unzip >/dev/null 2>&1 || apt install -y unzip
                             unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app
                             # Ensure virtualenv exists
                             if [ ! -d "app/venv" ]; then
