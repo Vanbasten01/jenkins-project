@@ -10,22 +10,15 @@ pipeline {
         stage('Set Up') {
             steps {
                 sh '''
-                    #!/bin/bash
-                    set -e
-                    python3 -m venv venv
-                    venv/bin/python -m pip install --upgrade pip
-                    venv/bin/python -m pip install -r requirements.txt
+                cd app
+                pip install -r requirements.txt
                 '''
             }
         }
 
         stage('Test') {
             steps {
-                sh '''
-                    #!/bin/bash
-                    set -e
-                    venv/bin/python -m pytest
-                '''
+                sh "pytest"
             }
         }
 
@@ -35,9 +28,9 @@ pipeline {
                     #!/bin/bash
                     set -e
                     # Install zip if missing
-                    command -v zip >/dev/null 2>&1 || sudo yum install -y zip
+                    command -v zip >/dev/null 2>&1 || sudo apt install -y zip
                     # Package everything EXCEPT the Jenkins venv
-                    zip -r myapp.zip . -x '*.git*' -x 'venv/*'
+                    zip -r myapp.zip . -x '*.git*'
                     ls -lart
                 '''
             }
@@ -53,18 +46,17 @@ pipeline {
                     sh '''
                         #!/bin/bash
                         set -e
-                        scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ec2-user
+                        scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ubuntu
                         ssh -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no ${USERNAME}@${SERVER_IP} /bin/bash << 'EOF'
                             set -e
-                            cd /home/ec2-user
-                            unzip -o myapp.zip -d app
+                            unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app
                             # Ensure virtualenv exists
                             if [ ! -d "app/venv" ]; then
-                                python3 -m venv app/venv
+                                python3 -m venv venv
                             fi
-                            # Use venv Python and pip directly
-                            app/venv/bin/python -m pip install --upgrade pip
-                            app/venv/bin/python -m pip install -r app/requirements.txt
+                            source app/venv/bin/activate
+                            cd /home/ubuntu/app
+                            pip install -r requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
                     '''
