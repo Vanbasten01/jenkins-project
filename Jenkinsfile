@@ -60,12 +60,8 @@ pipeline {
                             fi
                             source app/venv/bin/activate
                             cd /home/ubuntu/app
-                            # Upgrade pip inside the venv
-                            /home/ubuntu/app/venv/bin/python -m ensurepip --upgrade
-                            /home/ubuntu/app/venv/bin/python -m pip install --upgrade pip
-
                             # Install requirements using the venv pip
-                            /home/ubuntu/app/venv/bin/pip install -r /home/ubuntu/app/requirements.txt
+                            pip install -r requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
                     '''
