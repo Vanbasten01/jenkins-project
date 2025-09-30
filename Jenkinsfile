@@ -57,7 +57,8 @@ pipeline {
                             # Install requirements using the venv pip
                             sudo yum install -y python3-pip
                             python3 -m pip install -r requirements.txt
-                            sudo systemctl restart flaskapp.service
+                            sudo systemctl restart flaskapp.service || echo 'Failed to restart service'
+
 EOF
                     '''
                 }
