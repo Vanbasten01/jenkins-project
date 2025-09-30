@@ -36,9 +36,10 @@ pipeline {
                 sh '''
                     #!/bin/bash
                     set -e
-                    apt-get update || true  # optional if zip not installed
+                    apt-get update || true
                     apt-get install -y zip || true
-                    zip -r myapp.zip ./* -x '*.git*'
+                    # Package everything EXCEPT the Jenkins venv
+                    zip -r myapp.zip . -x '*.git*' -x 'venv/*'
                     ls -lart
                 '''
             }
@@ -47,8 +48,8 @@ pipeline {
         stage('Deploy to prod') {
             steps {
                 withCredentials([sshUserPrivateKey(
-                    credentialsId: 'ssh-key', 
-                    keyFileVariable: 'MY_SSH_KEY', 
+                    credentialsId: 'ssh-key',
+                    keyFileVariable: 'MY_SSH_KEY',
                     usernameVariable: 'USERNAME'
                 )]) {
                     sh '''
@@ -59,7 +60,7 @@ pipeline {
                             set -e
                             cd /home/ec2-user
                             unzip -o myapp.zip -d app
-                            # Create or activate virtual environment
+                            # Create and activate virtualenv on the EC2 server
                             if [ ! -d "app/venv" ]; then
                                 python3 -m venv app/venv
                             fi
