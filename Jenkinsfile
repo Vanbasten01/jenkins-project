@@ -31,7 +31,7 @@ pipeline {
                     #!/bin/bash
                     set -e
                     # Install zip if missing
-                    command -v zip >/dev/null 2>&1 || sudo apt install -y zip
+                    command -v zip >/dev/null 2>&1 || apt install -y zip
                     # Package everything EXCEPT the Jenkins venv
                     zip -r myapp.zip . -x '*.git*'
                     ls -lart
