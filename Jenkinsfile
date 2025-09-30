@@ -60,7 +60,7 @@ pipeline {
                             fi
                             source app/venv/bin/activate
                             cd /home/ubuntu/app
-                            pip install -r requirements.txt
+                            /home/ubuntu/app/venv/bin/pip install -r /home/ubuntu/app/requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
                     '''
