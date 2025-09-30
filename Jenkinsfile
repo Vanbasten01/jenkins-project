@@ -58,7 +58,7 @@ pipeline {
                             sudo yum install -y python3-pip
                             python3 -m pip install -r requirements.txt
                             sudo systemctl restart flaskapp.service
-                        EOF
+EOF
                     '''
                 }
             }
