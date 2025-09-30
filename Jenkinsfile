@@ -33,7 +33,7 @@ pipeline {
                     # Install zip if missing
                     command -v zip >/dev/null 2>&1 || apt install -y zip
                     # Package everything EXCEPT the Jenkins venv
-                    zip -r myapp.zip . -x '*.git*'
+                    zip -r myapp.zip . -x '*.git*' -x 'venv/*'
                     ls -lart
                 '''
             }
