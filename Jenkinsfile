@@ -10,10 +10,12 @@ pipeline {
         stage('Set Up') {
             steps {
                 sh '''
+                    #!/bin/bash
+                    set -e
                     python3 -m venv venv
-                    source venv/bin/activate
-                    python3 -m pip install --upgrade pip
-                    python3 -m pip install -r requirements.txt
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
                 '''
             }
         }
@@ -21,47 +23,54 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    source venv/bin/activate
-                    python3 -m pytest
+                    #!/bin/bash
+                    set -e
+                    . venv/bin/activate
+                    pytest
                 '''
             }
         }
 
         stage('Package code') {
             steps {
-                sh "zip -r myapp.zip ./* -x '*.git*'"
-                sh "ls -lart"
+                sh '''
+                    #!/bin/bash
+                    set -e
+                    apt-get update || true  # optional if zip not installed
+                    apt-get install -y zip || true
+                    zip -r myapp.zip ./* -x '*.git*'
+                    ls -lart
+                '''
             }
         }
 
         stage('Deploy to prod') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'MY_SSH_KEY', usernameVariable: 'USERNAME')]) {
-                    sh """
-                        scp -i \$MY_SSH_KEY -o StrictHostKeyChecking=no myapp.zip \${USERNAME}@\${SERVER_IP}:/home/ec2-user
-                        ssh -i \$MY_SSH_KEY -o StrictHostKeyChecking=no \${USERNAME}@\${SERVER_IP} /bin/bash << EOF
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ssh-key', 
+                    keyFileVariable: 'MY_SSH_KEY', 
+                    usernameVariable: 'USERNAME'
+                )]) {
+                    sh '''
+                        #!/bin/bash
+                        set -e
+                        scp -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no myapp.zip ${USERNAME}@${SERVER_IP}:/home/ec2-user
+                        ssh -i "$MY_SSH_KEY" -o StrictHostKeyChecking=no ${USERNAME}@${SERVER_IP} /bin/bash << 'EOF'
                             set -e
                             cd /home/ec2-user
                             unzip -o myapp.zip -d app
-
-                            # create venv if it doesn't exist
-                            if [ ! -d app/venv ]; then
+                            # Create or activate virtual environment
+                            if [ ! -d "app/venv" ]; then
                                 python3 -m venv app/venv
                             fi
-
-                            # activate venv and install dependencies
-                            source app/venv/bin/activate
-                            python3 -m pip install --upgrade pip
-                            python3 -m pip install -r app/requirements.txt
-
-                            # restart the flask service
+                            . app/venv/bin/activate
+                            pip install --upgrade pip
+                            pip install -r app/requirements.txt
                             sudo systemctl restart flaskapp.service
-EOF
-                    """
+                        EOF
+                    '''
                 }
             }
         }
-
     }
 }
-
