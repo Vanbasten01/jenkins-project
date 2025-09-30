@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -11,8 +12,8 @@ pipeline {
                 sh '''
                     python3 -m venv venv
                     . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    python -m pip install --upgrade pip
+                    python -m pip install -r requirements.txt
                 '''
             }
         }
@@ -20,16 +21,20 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-		. venv/bin/activate
-		pytest
-		'''
+                    . venv/bin/activate
+                    python -m pytest
+                '''
             }
         }
 
         stage('Package code') {
             steps {
-                sh "zip -r myapp.zip ./* -x '*.git*'"
-                sh "ls -lart"
+                sh '''
+                    sudo apt-get update || true
+                    sudo apt-get install -y zip || true
+                    zip -r myapp.zip ./* -x '*.git*'
+                    ls -lart
+                '''
             }
         }
 
@@ -41,10 +46,16 @@ pipeline {
                         ssh -i \$MY_SSH_KEY -o StrictHostKeyChecking=no \${USERNAME}@\${SERVER_IP} /bin/bash << 'EOF'
                             cd /home/ec2-user
                             unzip -o myapp.zip -d app
-                            . app/venv/bin/activate || python3 -m venv app/venv && . app/venv/bin/activate
-                            cd app
-                            pip install --upgrade pip
-                            pip install -r requirements.txt
+
+                            # create venv if not exists
+                            if [ ! -d app/venv ]; then
+                                python3 -m venv app/venv
+                            fi
+
+                            . app/venv/bin/activate
+                            python -m pip install --upgrade pip
+                            python -m pip install -r app/requirements.txt
+
                             sudo systemctl restart flaskapp.service
                         EOF
                     """
