@@ -60,6 +60,7 @@ pipeline {
                             fi
                             source app/venv/bin/activate
                             cd /home/ubuntu/app
+                            command -v pip3 >/dev/null 2>&1 || sudo apt install -y python3-pip
                             pip install -r requirements.txt
                             sudo systemctl restart flaskapp.service
                         EOF
